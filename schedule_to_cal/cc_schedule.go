@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math/rand"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
 )
 
 type CalendarEvent struct {
+	ID      string
 	StartDt string
 	EndDt   string
 }
@@ -20,6 +23,8 @@ var dateRegex = regexp.MustCompile(`(\d\d)/(\d\d) \(.\)`)
 var timeRegex = regexp.MustCompile(`(\d\d:\d\d)-(\d\d:\d\d)`)
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	schedules := []CalendarEvent{}
@@ -35,6 +40,7 @@ func main() {
 
 		if dateRegex.MatchString(currentLine) {
 			if scheduleEvent.EndDt != "" {
+				scheduleEvent.ID = strconv.FormatInt(time.Now().Unix(), 10) + strconv.Itoa(rand.Intn(1000))
 				schedules = append(schedules, scheduleEvent)
 			}
 			calDate = getCalDate(currentLine)
@@ -44,7 +50,9 @@ func main() {
 			}
 		} else if timeRegex.MatchString(currentLine) {
 			if currentLineMatch[1] != previousLineMatch[2] {
+				scheduleEvent.ID = strconv.FormatInt(time.Now().Unix(), 10) + strconv.Itoa(rand.Intn(1000))
 				schedules = append(schedules, scheduleEvent)
+
 				scheduleEvent = CalendarEvent{
 					StartDt: calDate + getCalTime(currentLineMatch[1]),
 					EndDt:   calDate + getCalTime(currentLineMatch[2]),
@@ -57,6 +65,7 @@ func main() {
 
 	}
 
+	scheduleEvent.ID = strconv.FormatInt(time.Now().Unix(), 10) + strconv.Itoa(rand.Intn(1000))
 	schedules = append(schedules, scheduleEvent)
 
 	fmt.Println(generateICSOutput(schedules))
@@ -90,10 +99,10 @@ CALSCALE:GREGORIAN
 METHOD:PUBLISH
 PRODID:-//Test Cal//EN
 VERSION:2.0
-{{ range $index, $event := . }}BEGIN:VEVENT
-UID:{{$index}}
-DTSTART;VALUE=DATE:{{$event.StartDt}}
-DTEND;VALUE=DATE:{{$event.EndDt}}
+{{ range . }}BEGIN:VEVENT
+UID:{{.ID}}
+DTSTART;TZID=Asia/Taipei:{{.StartDt}}
+DTEND;TZID=Asia/Taipei:{{.EndDt}}
 SUMMARY:值班
 END:VEVENT
 {{ end }}END:VCALENDAR`

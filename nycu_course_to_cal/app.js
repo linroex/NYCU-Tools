@@ -4,7 +4,6 @@ Date.prototype.addDays = function(days) {
 }
 
 var course_dom = document.querySelectorAll("tbody tr.ant-table-row")
-var cal_event_id = 0
 
 var course_result = []
 
@@ -16,7 +15,7 @@ course_dom.forEach(function(course_) {
   var course_location = course[7].innerText.split('-')[1]
 
   dts.forEach(function(course_dt) {
-    var school_start_date = new Date(2022,2-1,14)
+    var school_start_date = new Date("14 Feb 2022 00:00 UTC")
     
     date_ = school_start_date.addDays(course_dt['weekday'] - 1).toISOString().substring(0,11).replaceAll('-', '')
 
@@ -24,14 +23,12 @@ course_dom.forEach(function(course_) {
     end_dt = date_ + course_dt['time']['end']
 
     course_result.push({
-      id: cal_event_id, 
       title: course_name, 
       start_dt: start_dt, 
       end_dt: end_dt, 
       location: course_location
     })
 
-    cal_event_id += 1
   })
   
 })
@@ -105,12 +102,12 @@ function time_convert(time_str) {
 
 }
 
-function new_event( event_id, title, start_dt, end_dt, location ) {
+function new_event( title, start_dt, end_dt, location ) {
   return (
     "BEGIN:VEVENT\n" +
-    "UID:" + event_id + "\n" +
-    "DTSTART;VALUE=DATE:" + start_dt + "\n" +
-    "DTEND;VALUE=DATE:" + end_dt + "\n" +
+    "UID:" + performance.now().toString() + ".nycu." + Math.random().toString() + "\n" +
+    "DTSTART;TZID=Asia/Taipei:" + start_dt + "\n" +
+    "DTEND;TZID=Asia/Taipei:" + end_dt + "\n" +
     "SUMMARY:" + title + "\n" +
     "LOCATION:" + location + "\n" + 
     "END:VEVENT\n"
@@ -122,7 +119,7 @@ function generate_ics(events_) {
   var events = []
 
   events_.forEach(function(event) {
-    events.push(new_event(event['id'], event['title'], event['start_dt'], event['end_dt'], event['location']))
+    events.push(new_event(event['title'], event['start_dt'], event['end_dt'], event['location']))
   })
 
   return ics_template.replace('{events}', events.join(""))
