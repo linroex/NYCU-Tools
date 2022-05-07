@@ -16,6 +16,8 @@ def save_db(user_db_f, user_db):
     user_db_f.truncate()
     user_db_f.write(json.dumps(user_db))
 
+_action = ""
+
 products = {}
 with open("products.json", "r", encoding="utf8") as prod_f:
     products = json.loads(prod_f.read())
@@ -55,13 +57,16 @@ while True:
                 if transaction['deleted_at'] is None:
                     total += transaction['amount']
 
-            clear()                        
-
-            print('\n=====功能選單=====\n購物： \t\t\tdefault\n計算未結金額： \t\ts\n結帳： \t\t\tc\n離開： \t\t\tq\n')
-            cmd = input(f'\n({user}: {total}) 請輸入購物金額（或掃描條碼）： ')
-
             prod_name = ""
             amount = 0
+
+            if _action == "":
+                clear()
+                print('\n=====功能選單=====\n購物： \t\t\tdefault\n計算未結金額： \t\ts\n結帳： \t\t\tc\n離開： \t\t\tq\n')
+                cmd = input(f'\n({user}: {total}) 請輸入購物金額（或掃描條碼）： ')
+            else:
+                cmd = _action
+                _action = ""
 
             if cmd == "q":
                 break
@@ -90,6 +95,12 @@ while True:
                 continue
                         
             elif bool(re.match(r"(\d{7,})|(^CC-Food-\d+)", cmd)):
+
+                if cmd not in products:
+                    print("此商品不存在")
+                    input()
+                    continue
+
                 # if barcode
                 prod_name = products[cmd]['name']
                 amount = int(products[cmd]['price'])
@@ -111,10 +122,10 @@ while True:
             if prod_name != "":
                 print(f"{prod_name} 已購買成功。\n")
             else:
-                print('已儲存購買記錄。\n')
+                print(f'已儲存購買記錄 {amount} 元。\n')
             
             save_db(user_db_f, user_db)
 
-            input()
+            _action = input()
 
 
